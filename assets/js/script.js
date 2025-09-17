@@ -3,8 +3,14 @@ const url = "https://striveschool-api.herokuapp.com/books";
 const row = document.getElementById("rowCard");
 const firstCol = document.getElementById("firstCol");
 let arrayBooks = [];
-
+let booksShopping = [];
+const container = document.getElementById("containerCard");
 // FUNZIONI
+
+// salvataggio in localestorage
+const addToLocal = (array) => {
+  localStorage.setItem("books-memory", JSON.stringify(array));
+};
 
 // // funzione per la generazione delle card
 const generateCard = (book, index) => {
@@ -46,31 +52,43 @@ const generateCard = (book, index) => {
 
 const generateShopping = (index) => {
   let col = document.getElementById("colShopping");
+  let containerCol = "";
   if (!col) {
+    const container = document.getElementById("containerCard");
+    container.className = "p-5";
     col = document.createElement("div");
     col.id = "colShopping";
     const h2 = document.createElement("h2");
     h2.innerText = "shopping";
     h2.classList.add("text-uppercase", "display-3", "text-center", "fw-bold", "text-white");
     col.appendChild(h2);
-    const containerCol = document.createElement("div");
-    containerCol.classList.add("bg-success", "bg-opacity-75");
-    col.appendChild(containerCol);
+    const containerC = document.createElement("div");
+    containerC.classList.add("bg-secondary", "bg-opacity-75", "text-center", "rounded-4", "p-2");
+    containerC.id = "containerCol";
+    containerCol = containerC;
+    col.appendChild(containerC);
+  } else {
+    containerCol = document.getElementById("containerCol");
   }
-
   col.classList.add("col-2");
   const div = document.createElement("div");
-  div.classList.add("d-flex", "justify-content-between", "align-items-center", "card", "p-3");
+  div.classList.add("d-flex", "justify-content-between", "align-items-center", "my-3");
+  div.setAttribute("shopping-index", index);
   firstCol.className = "col-10";
-  const book = arrayBooks[index];
+  const book = booksShopping[index];
   const cardImg = document.createElement("img");
   cardImg.classList.add("img-fluid", "rounded-start");
   cardImg.src = book.img;
+  cardImg.style.height = "200px";
   const cardText = document.createElement("p");
   cardText.classList.add("card-text", "fs-5", "fw-semibold");
   cardText.innerText = book.price + "€";
-  div.append(cardImg, cardText);
-  col.appendChild(div);
+  const i = document.createElement("i");
+  i.classList.add("fs-4", "text-danger");
+  i.style.cursor = "pointer";
+  i.innerHTML = `<i class="bi bi-trash3" icon-index="${index}"></i>`;
+  div.append(cardImg, cardText, i);
+  containerCol.appendChild(div);
   firstCol.after(col);
 };
 
@@ -112,13 +130,46 @@ row.addEventListener("click", (e) => {
     removeCard(index);
   } else if (target.tagName === "BUTTON" && target.hasAttribute("btnadd-index")) {
     const index = target.getAttribute("btnadd-index");
-    generateShopping(index);
+    const bookSendToArray = arrayBooks[index];
+    booksShopping.push(bookSendToArray);
+    addToLocal(booksShopping);
+    generateShopping(booksShopping.length - 1);
   } else {
     return;
+  }
+});
+
+// elimina book nella lista shopping
+
+const removeShop = (index) => {
+  booksShopping.splice(index, 1);
+  addToLocal(booksShopping);
+  const div = document.querySelector(`div[shopping-index="${index}"]`);
+  if (div) {
+    div.remove();
+  } else {
+    return;
+  }
+};
+
+container.addEventListener("click", (e) => {
+  const target = e.target;
+  console.log(target);
+  if (target.tagName === "I" && target.hasAttribute("icon-index")) {
+    const index = target.getAttribute("icon-index");
+    removeShop(index);
   }
 });
 
 // richiamo il fetch
 window.addEventListener("DOMContentLoaded", () => {
   getBooks();
+  const hasBooks = localStorage.getItem("books-memory");
+  if (hasBooks) {
+    const books = JSON.parse(hasBooks);
+    booksShopping = books;
+    for (let i = 0; i < booksShopping.length; i++) {
+      generateShopping(i);
+    }
+  }
 });
