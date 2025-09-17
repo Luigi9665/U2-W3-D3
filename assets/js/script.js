@@ -84,9 +84,10 @@ const generateShopping = (index) => {
   cardText.classList.add("card-text", "fs-5", "fw-semibold");
   cardText.innerText = book.price + "€";
   const i = document.createElement("i");
-  i.classList.add("fs-4", "text-danger");
+  i.classList.add("fs-4", "text-danger", "bi", "bi-trash3");
   i.style.cursor = "pointer";
-  i.innerHTML = `<i class="bi bi-trash3" icon-index="${index}"></i>`;
+  i.setAttribute("icon-index", index);
+  i.id = book.asin;
   div.append(cardImg, cardText, i);
   containerCol.appendChild(div);
   firstCol.after(col);
@@ -142,8 +143,12 @@ row.addEventListener("click", (e) => {
 // elimina book nella lista shopping
 
 const removeShop = (index) => {
+  console.log("indice da eliminare:", index);
   booksShopping.splice(index, 1);
   addToLocal(booksShopping);
+};
+
+const removeDiv = (index) => {
   const div = document.querySelector(`div[shopping-index="${index}"]`);
   if (div) {
     div.remove();
@@ -154,10 +159,22 @@ const removeShop = (index) => {
 
 container.addEventListener("click", (e) => {
   const target = e.target;
-  console.log(target);
   if (target.tagName === "I" && target.hasAttribute("icon-index")) {
-    const index = target.getAttribute("icon-index");
+    // target.id id di i
+    // const index = booksShopping.findIndex((book) => book.title === title);
+    const index = booksShopping.findIndex((book) => book.asin === target.id);
+    const indexDiv = target.getAttribute("icon-index");
+    console.log(booksShopping[index]);
+    console.log(booksShopping);
     removeShop(index);
+    removeDiv(indexDiv);
+    if (booksShopping.length === 0) {
+      localStorage.removeItem("books-memory");
+      const col = document.getElementById("colShopping");
+      col.remove();
+      firstCol.className = "col";
+      container.className = "container mt-5";
+    }
   }
 });
 
